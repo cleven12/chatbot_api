@@ -1,9 +1,11 @@
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-70b-versatile";
+/** llama-3.1-70b-versatile was decommissioned on Groq — use 3.3 */
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 const GROQ_TIMEOUT_MS = 15_000;
 
-const GEMINI_GENERATE_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+/** Fallback generate model (embed key may still work when free-tier generate is limited) */
+const GEMINI_GENERATE_MODEL = "gemini-2.5-flash";
+const GEMINI_GENERATE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_GENERATE_MODEL}:generateContent`;
 
 interface GroqChoice {
   message?: { content?: string };
@@ -22,22 +24,32 @@ interface GeminiGenerateResponse {
 }
 
 /**
- * Ask an LLM: try Groq (Llama 3.1 70B) first, fall back to Gemini on any failure.
+ * Ask an LLM: try Groq first, fall back to Gemini on any failure.
+ * Logs which provider served the response.
  */
 export async function askLLM(
   message: string,
   systemPrompt: string
 ): Promise<string> {
+  let groqError: string | null = null;
   try {
     const answer = await askGroq(message, systemPrompt);
-    console.log("[llm] provider=groq");
+    console.log("[llm] provider=groq model=" + GROQ_MODEL);
     return answer;
   } catch (err) {
-    const reason = err instanceof Error ? err.message : String(err);
-    console.warn("[llm] groq failed, falling back to gemini:", reason);
+    groqError = err instanceof Error ? err.message : String(err);
+    console.warn("[llm] groq failed, falling back to gemini:", groqError);
+  }
+
+  try {
     const answer = await askGemini(message, systemPrompt);
-    console.log("[llm] provider=gemini");
+    console.log("[llm] provider=gemini model=" + GEMINI_GENERATE_MODEL);
     return answer;
+  } catch (err) {
+    const geminiError = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `LLM failed. Groq: ${groqError}. Gemini: ${geminiError}`
+    );
   }
 }
 
@@ -72,9 +84,7 @@ async function askGroq(message: string, systemPrompt: string): Promise<string> {
     const body = (await response.json()) as GroqResponse;
 
     if (!response.ok) {
-      throw new Error(
-        body.error?.message ?? `Groq HTTP ${response.status}`
-      );
+      throw new Error(body.error?.message ?? `Groq HTTP ${response.status}`);
     }
 
     const content = body.choices?.[0]?.message?.content?.trim();
