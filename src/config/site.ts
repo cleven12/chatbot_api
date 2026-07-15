@@ -32,15 +32,15 @@ export const siteConfig = {
     github: "https://github.com/cleven12",
     githubUser: "cleven12",
     /** Update these so visitors can reach you */
-    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+255 700 000 000",
+    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+255 692 654 000",
     phoneHref:
-      process.env.NEXT_PUBLIC_CONTACT_PHONE_HREF || "tel:+255700000000",
+      process.env.NEXT_PUBLIC_CONTACT_PHONE_HREF || "tel:+255692654000",
     whatsapp:
-      process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "https://wa.me/255700000000",
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "cleven12@github.local",
+      process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "https://wa.me/255692654000",
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "clevengodsontech@gmail.com",
     emailHref:
       process.env.NEXT_PUBLIC_CONTACT_EMAIL_HREF ||
-      "mailto:cleven12@github.local",
+      "mailto:clevengodsontech@gmail.com",
     location: "East Africa · Remote-friendly",
   },
   social: {
