@@ -33,3 +33,4 @@ npm-debug.log*
 
 # Local scratch
 session_hist.txt
+.vercel

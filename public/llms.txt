@@ -1,0 +1,26 @@
+# Tour RAG API
+
+> Multi-tenant RAG chatbot API for East African safari and trek operators.
+
+Base URL: https://tourragapi.vercel.app
+Docs: https://tourragapi.vercel.app/docs
+Demo: https://tourragapi.vercel.app/demo
+Integrate: https://tourragapi.vercel.app/integrate
+
+## Endpoints
+
+- GET /api/v1/health
+- POST /api/v1/tenants (x-admin-key)
+- GET /api/v1/tenants/:id (x-admin-key)
+- POST /api/v1/ingest (x-admin-key)
+- POST /api/v1/chat (x-api-key tenant)
+
+## Auth
+
+- Tenant chat: header x-api-key
+- Admin (tenants + ingest): header x-admin-key
+
+## Contact
+
+GitHub: https://github.com/cleven12
+Repo: https://github.com/cleven12/chatbot_api
