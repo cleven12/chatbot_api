@@ -140,6 +140,13 @@ export async function POST(request: Request) {
     return jsonOk(response);
   } catch (err) {
     console.error("[chat] unhandled error:", err);
-    return jsonError(500, "INTERNAL_ERROR", "An unexpected error occurred");
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred";
+    const code = /Embedding error/i.test(message)
+      ? "EMBEDDING_ERROR"
+      : /Missing GROQ|Missing GEMINI|provider/i.test(message)
+        ? "LLM_ERROR"
+        : "INTERNAL_ERROR";
+    return jsonError(500, code, message);
   }
 }

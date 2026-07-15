@@ -1,5 +1,7 @@
-const GEMINI_EMBED_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent";
+/** Gemini embedding model — embedding-001 is retired; use gemini-embedding-001 @ 768 dims */
+const GEMINI_EMBED_MODEL = "gemini-embedding-001";
+const GEMINI_EMBED_DIM = 768;
+const GEMINI_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_EMBED_MODEL}:embedContent`;
 
 interface GeminiEmbedResponse {
   embedding?: {
@@ -12,7 +14,7 @@ interface GeminiEmbedResponse {
 }
 
 /**
- * Embed text with Google Gemini embedding-001 (768 dimensions) via REST.
+ * Embed text with Gemini (768 dimensions) for pgvector match_documents.
  */
 export async function embed(text: string): Promise<number[]> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -30,14 +32,22 @@ export async function embed(text: string): Promise<number[]> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "models/embedding-001",
+      model: `models/${GEMINI_EMBED_MODEL}`,
       content: {
         parts: [{ text }],
       },
+      outputDimensionality: GEMINI_EMBED_DIM,
     }),
   });
 
-  const body = (await response.json()) as GeminiEmbedResponse;
+  let body: GeminiEmbedResponse;
+  try {
+    body = (await response.json()) as GeminiEmbedResponse;
+  } catch {
+    throw new Error(
+      `Embedding error: Gemini returned non-JSON (HTTP ${response.status})`
+    );
+  }
 
   if (!response.ok) {
     const msg =
@@ -49,6 +59,12 @@ export async function embed(text: string): Promise<number[]> {
   const values = body.embedding?.values;
   if (!values || !Array.isArray(values) || values.length === 0) {
     throw new Error("Embedding error: empty or missing embedding values");
+  }
+
+  if (values.length !== GEMINI_EMBED_DIM) {
+    throw new Error(
+      `Embedding error: expected ${GEMINI_EMBED_DIM} dims, got ${values.length}`
+    );
   }
 
   return values;

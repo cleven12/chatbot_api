@@ -121,6 +121,11 @@ export async function POST(request: Request) {
     return jsonOk(response, 201);
   } catch (err) {
     console.error("[ingest] unhandled error:", err);
-    return jsonError(500, "INTERNAL_ERROR", "An unexpected error occurred");
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred";
+    const code = /Embedding error/i.test(message)
+      ? "EMBEDDING_ERROR"
+      : "INTERNAL_ERROR";
+    return jsonError(500, code, message);
   }
 }
