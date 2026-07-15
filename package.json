@@ -1,21 +1,25 @@
 {
   "name": "chatbot_api",
   "version": "1.0.0",
-  "description": "Multi-tenant tourism RAG API for East African safari/trek operators",
-  "type": "module",
+  "description": "Multi-tenant tourism RAG API + chat UI for East African safari/trek operators",
   "private": true,
   "scripts": {
-    "dev": "netlify dev",
-    "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "deploy": "npx vercel --prod"
   },
   "dependencies": {
-    "@netlify/functions": "^3.0.0",
-    "@supabase/supabase-js": "^2.49.0"
+    "@supabase/supabase-js": "^2.49.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "netlify-cli": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "typescript": "^5.7.0"
   },
   "engines": {

@@ -1,4 +1,4 @@
-import type { ApiError } from "../types/index.ts";
+import type { ApiError } from "../types";
 
 /** Build a JSON Response with the consistent `{ error, code }` shape. */
 export function jsonError(

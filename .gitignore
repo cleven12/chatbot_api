@@ -7,7 +7,12 @@ venv/
 .env.local
 .env.*.local
 
-# Netlify
+# Next.js / Vercel
+.next/
+out/
+.vercel/
+
+# Netlify (legacy)
 .netlify/
 
 # Build / cache
@@ -25,3 +30,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Local scratch
+session_hist.txt

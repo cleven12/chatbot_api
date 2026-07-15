@@ -1,143 +1,95 @@
-# Tourism RAG API
+# Tourism RAG API + Chat UI
 
-Multi-tenant, API-only RAG chatbot backend for East African tourism companies (safari/trek operators). One shared Netlify deployment; each tenant has its own API key, system prompt, and knowledge-base namespace in Supabase Postgres + pgvector.
+Multi-tenant RAG chatbot for East African safari/trek operators.
 
-| | |
-|---|---|
-| Runtime | Netlify Functions (TypeScript `.mts`) |
-| Database | Supabase Postgres + `pgvector` |
-| Embeddings | Google Gemini `embedding-001` (768-dim) |
-| LLM | Groq Llama 3.1 70B (primary), Gemini (fallback) |
-| Auth | `x-api-key` (tenants) · `x-admin-key` (admin) |
+- **API** — Next.js route handlers under `/api/v1/*`
+- **Client** — chat UI at `/` (deployed together on Vercel)
+- **DB** — Supabase Postgres + pgvector
+- **Embeddings** — Gemini `embedding-001`
+- **LLM** — Groq Llama 3.1 (primary), Gemini fallback
 
 ---
 
-## Setup
+## Fix the RLS error first
 
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Environment variables
-
-```bash
-cp .env.example .env
-```
-
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_KEY` | Supabase **service role** key (server only) |
-| `GEMINI_API_KEY` | Google AI Studio / Gemini API key |
-| `GROQ_API_KEY` | Groq API key |
-| `ADMIN_API_KEY` | Shared secret for admin endpoints |
-
-Set the same variables in the Netlify UI for production.
-
-### 3. Database migration
-
-In the Supabase SQL editor, run:
+If create-tenant fails with:
 
 ```text
-supabase/migrations/0001_init.sql
+new row violates row-level security policy for table "tenants"
 ```
 
-This creates `tenants`, `documents`, `chat_history`, `rate_limits`, the `vector` extension, IVFFlat index, and `match_documents()`.
+you are almost always using the **anon** key instead of the **service_role** key.
 
-### 4. Local dev
+1. Open Supabase → **Project Settings** → **API**
+2. Copy **`service_role`** (secret) — not `anon` / `public`
+3. Put it in `.env` as `SUPABASE_SERVICE_KEY`
+4. Run SQL in Supabase SQL editor:
+   - `supabase/migrations/0001_init.sql` (if not already)
+   - `supabase/migrations/0002_fix_rls.sql`
+
+Restart the app after updating `.env`.
+
+---
+
+## Local setup (Vercel / Next.js)
 
 ```bash
+# clean old Netlify deps if you installed them earlier
+rm -rf node_modules package-lock.json
+
+npm install
+cp .env.example .env
+# fill SUPABASE_* (service_role!), GEMINI_*, GROQ_*, ADMIN_API_KEY
+
 npm run dev
 ```
 
-Health check:
+Open:
 
-```bash
-curl http://localhost:8888/api/v1/health
-# {"status":"ok"}
-```
+- UI: http://localhost:3000  
+- Health: http://localhost:3000/api/v1/health  
 
 ---
 
-## Endpoints
+## Deploy with Vercel CLI
 
-All errors use a consistent shape:
+```bash
+# one-time
+npx vercel login
 
-```json
-{ "error": "Human-readable message", "code": "MACHINE_CODE" }
+# link project + set env vars when prompted, or:
+npx vercel env add SUPABASE_URL
+npx vercel env add SUPABASE_SERVICE_KEY
+npx vercel env add GEMINI_API_KEY
+npx vercel env add GROQ_API_KEY
+npx vercel env add ADMIN_API_KEY
+
+# preview
+npx vercel
+
+# production
+npx vercel --prod
+# or: npm run deploy
 ```
 
-Common codes: `UNAUTHORIZED`, `VALIDATION_ERROR`, `INVALID_JSON`, `NOT_FOUND`, `RATE_LIMITED`, `INTERNAL_ERROR`, `METHOD_NOT_ALLOWED`.
+In the Vercel dashboard you can also paste the same env vars under **Settings → Environment Variables**.
 
 ---
 
-### `GET /api/v1/health`
-
-No auth. Liveness probe.
+## Bootstrap a tenant
 
 ```bash
-curl -s http://localhost:8888/api/v1/health
-```
-
-**Response:** `{ "status": "ok" }`
-
----
-
-### `POST /api/v1/tenants` (admin)
-
-Create a tenant. The `api_key` is returned **once** — store it securely.
-
-**Headers:** `x-admin-key`, `Content-Type: application/json`
-
-```bash
-curl -s -X POST http://localhost:8888/api/v1/tenants \
+# 1) Create tenant (save api_key — shown once)
+curl -s -X POST http://localhost:3000/api/v1/tenants \
   -H "Content-Type: application/json" \
   -H "x-admin-key: $ADMIN_API_KEY" \
   -d '{
     "name": "Serengeti Trails",
     "system_prompt": "You are a helpful safari booking assistant for Serengeti Trails. Be concise and friendly."
   }'
-```
 
-**Response (201):**
-
-```json
-{
-  "id": "uuid",
-  "name": "Serengeti Trails",
-  "system_prompt": "...",
-  "api_key": "hex-secret",
-  "created_at": "..."
-}
-```
-
----
-
-### `GET /api/v1/tenants/:id` (admin)
-
-Fetch tenant metadata. **Never** returns `api_key`.
-
-```bash
-curl -s http://localhost:8888/api/v1/tenants/TENANT_UUID \
-  -H "x-admin-key: $ADMIN_API_KEY"
-```
-
-**Response:** `{ "id", "name", "system_prompt", "created_at" }`
-
----
-
-### `POST /api/v1/ingest` (admin)
-
-Push pre-chunked knowledge base text (tour packages, FAQs, routes). Does not scrape or chunk.
-
-**Headers:** `x-admin-key`, `Content-Type: application/json`
-
-**Limits:** max 50 chunks per request; each chunk max 8000 characters.
-
-```bash
-curl -s -X POST http://localhost:8888/api/v1/ingest \
+# 2) Ingest knowledge chunks
+curl -s -X POST http://localhost:3000/api/v1/ingest \
   -H "Content-Type: application/json" \
   -H "x-admin-key: $ADMIN_API_KEY" \
   -d '{
@@ -146,29 +98,12 @@ curl -s -X POST http://localhost:8888/api/v1/ingest \
       {
         "content": "3-day Serengeti safari from Arusha includes game drives and camping. From $890 per person.",
         "metadata": { "type": "package", "days": 3 }
-      },
-      {
-        "content": "Kilimanjaro Marangu route is 5–6 days. Summit success is higher with acclimatization days.",
-        "metadata": { "type": "route", "peak": "kilimanjaro" }
       }
     ]
   }'
-```
 
-**Response (201):** `{ "inserted": 2 }`
-
----
-
-### `POST /api/v1/chat` (tenant)
-
-RAG chat: embed → retrieve top 4 docs → generate → save history.
-
-**Headers:** `x-api-key` (tenant key), `Content-Type: application/json`
-
-**Limits:** `message` max 2000 characters; 30 requests per tenant per 60-second window.
-
-```bash
-curl -s -X POST http://localhost:8888/api/v1/chat \
+# 3) Chat (or use the web UI with the tenant api_key)
+curl -s -X POST http://localhost:3000/api/v1/chat \
   -H "Content-Type: application/json" \
   -H "x-api-key: $TENANT_API_KEY" \
   -d '{
@@ -177,65 +112,40 @@ curl -s -X POST http://localhost:8888/api/v1/chat \
   }'
 ```
 
-**Response:**
-
-```json
-{
-  "answer": "...",
-  "sources": [
-    {
-      "id": "uuid",
-      "content": "...",
-      "metadata": {},
-      "similarity": 0.82
-    }
-  ],
-  "session_id": "web-session-001"
-}
-```
-
-**429** when rate limited includes `Retry-After` and `{ "error", "code": "RATE_LIMITED" }`.
-
 ---
 
-## Architecture (request flow)
+## Endpoints
 
-```
-Client
-  │  x-api-key
-  ▼
-POST /api/v1/chat
-  │
-  ├─ auth → tenants table
-  ├─ rate limit → rate_limits table
-  ├─ embed(message) → Gemini embedding-001
-  ├─ match_documents RPC → pgvector (tenant-scoped)
-  ├─ askLLM → Groq Llama 3.1 → fallback Gemini
-  ├─ insert chat_history (user + assistant)
-  └─ JSON { answer, sources, session_id }
-```
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/api/v1/health` | none | Liveness |
+| POST | `/api/v1/tenants` | `x-admin-key` | Create tenant (returns `api_key` once) |
+| GET | `/api/v1/tenants/:id` | `x-admin-key` | Tenant metadata (no key) |
+| POST | `/api/v1/ingest` | `x-admin-key` | Insert embedded chunks |
+| POST | `/api/v1/chat` | `x-api-key` | RAG chat |
+
+Errors always look like: `{ "error": "...", "code": "..." }`.
 
 ---
 
 ## Project layout
 
 ```
-netlify/functions/     # health, chat, ingest, tenants (.mts)
-src/lib/               # supabase, auth, embeddings, llm, admin, rate-limit, errors
-src/types/             # shared TypeScript interfaces
-supabase/migrations/   # SQL schema
-public/                # static publish root for Netlify
+app/
+  page.tsx                 # chat client
+  api/v1/health|chat|ingest|tenants/
+src/lib/                   # supabase, auth, embeddings, llm, rate-limit
+src/types/
+supabase/migrations/
 ```
+
+Legacy Netlify function files under `netlify/` are unused; Vercel is the deploy target.
 
 ---
 
 ## Notes
 
-- Service role key bypasses RLS; keep it server-side only.
-- IVFFlat index works best after you have data; re-run `ANALYZE documents` after large ingests if needed.
-- No websockets or background workers — every request is synchronous.
-- Dependencies are intentionally minimal: `@netlify/functions`, `@supabase/supabase-js`.
-
-## License
-
-MIT
+- Never put `SUPABASE_SERVICE_KEY` or `ADMIN_API_KEY` in the browser or `NEXT_PUBLIC_*`.
+- The chat UI only stores the **tenant** API key in `localStorage`.
+- Rate limit: 30 chat requests / tenant / 60s.
+- Message max length: 2000 characters.

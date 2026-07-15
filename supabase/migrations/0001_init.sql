@@ -90,3 +90,34 @@ as $$
   order by d.embedding <=> query_embedding
   limit greatest(match_count, 1);
 $$;
+
+-- ---------------------------------------------------------------------------
+-- RLS: block anon/public; backend must use service_role key (bypasses RLS)
+-- ---------------------------------------------------------------------------
+alter table tenants enable row level security;
+alter table documents enable row level security;
+alter table chat_history enable row level security;
+alter table rate_limits enable row level security;
+
+grant usage on schema public to service_role;
+grant all on table tenants to service_role;
+grant all on table documents to service_role;
+grant all on table chat_history to service_role;
+grant all on table rate_limits to service_role;
+grant execute on function match_documents(vector, uuid, int) to service_role;
+
+create policy "service_role_tenants"
+  on tenants for all to service_role
+  using (true) with check (true);
+
+create policy "service_role_documents"
+  on documents for all to service_role
+  using (true) with check (true);
+
+create policy "service_role_chat_history"
+  on chat_history for all to service_role
+  using (true) with check (true);
+
+create policy "service_role_rate_limits"
+  on rate_limits for all to service_role
+  using (true) with check (true);

@@ -1,26 +1,21 @@
-import type { Context } from "@netlify/functions";
-import { getTenant } from "../../src/lib/auth.ts";
-import { MATCH_COUNT, MAX_MESSAGE_LENGTH } from "../../src/lib/constants.ts";
-import { embed } from "../../src/lib/embeddings.ts";
-import { jsonError, jsonOk } from "../../src/lib/errors.ts";
-import { askLLM } from "../../src/lib/llm.ts";
-import { checkRateLimit } from "../../src/lib/rate-limit.ts";
-import { getSupabase } from "../../src/lib/supabase.ts";
+import { getTenant } from "@/lib/auth";
+import { MATCH_COUNT, MAX_MESSAGE_LENGTH } from "@/lib/constants";
+import { embed } from "@/lib/embeddings";
+import { jsonError, jsonOk } from "@/lib/errors";
+import { askLLM } from "@/lib/llm";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getSupabase } from "@/lib/supabase";
 import type {
   ChatRequest,
   ChatResponse,
   ChatSource,
   MatchDocument,
-} from "../../src/types/index.ts";
+} from "@/types";
 
-export default async function handler(
-  request: Request,
-  _context: Context
-): Promise<Response> {
-  if (request.method !== "POST") {
-    return jsonError(405, "METHOD_NOT_ALLOWED", "Use POST");
-  }
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
+export async function POST(request: Request) {
   try {
     const apiKey = request.headers.get("x-api-key");
     const tenant = await getTenant(apiKey);
@@ -90,12 +85,7 @@ export default async function handler(
     const contextBlock =
       docs.length === 0
         ? "No relevant knowledge base documents were found."
-        : docs
-            .map(
-              (d, i) =>
-                `[Source ${i + 1}]\n${d.content}`
-            )
-            .join("\n\n");
+        : docs.map((d, i) => `[Source ${i + 1}]\n${d.content}`).join("\n\n");
 
     const systemPrompt = [
       tenant.system_prompt.trim(),
@@ -132,7 +122,6 @@ export default async function handler(
 
     if (historyError) {
       console.error("[chat] history insert failed:", historyError.message);
-      // Still return the answer; history is best-effort
     }
 
     const sources: ChatSource[] = docs.map((d) => ({

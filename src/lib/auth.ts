@@ -1,5 +1,5 @@
-import type { Tenant } from "../types/index.ts";
-import { getSupabase } from "./supabase.ts";
+import type { Tenant } from "../types";
+import { getSupabase } from "./supabase";
 
 /**
  * Look up a tenant by API key.

@@ -1,4 +1,4 @@
-import { getSupabase } from "./supabase.ts";
+import { getSupabase } from "./supabase";
 
 /** Fixed window size in seconds */
 const WINDOW_SECONDS = 60;
@@ -14,7 +14,6 @@ export interface RateLimitResult {
 
 /**
  * Simple fixed-window rate limit stored in Postgres.
- * Returns whether the request is allowed for this tenant.
  */
 export async function checkRateLimit(
   tenantId: string
@@ -37,7 +36,6 @@ export async function checkRateLimit(
 
   if (selectError) {
     console.error("[rate-limit] select failed:", selectError.message);
-    // Fail open so a DB blip does not block all chat
     return {
       allowed: true,
       remaining: MAX_REQUESTS_PER_WINDOW,

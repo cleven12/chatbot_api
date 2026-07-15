@@ -1,26 +1,14 @@
-import type { Context } from "@netlify/functions";
-import { isValidAdminKey } from "../../src/lib/admin.ts";
-import {
-  MAX_CHUNK_LENGTH,
-  MAX_CHUNKS_PER_REQUEST,
-} from "../../src/lib/constants.ts";
-import { embed } from "../../src/lib/embeddings.ts";
-import { jsonError, jsonOk } from "../../src/lib/errors.ts";
-import { getSupabase } from "../../src/lib/supabase.ts";
-import type {
-  IngestChunk,
-  IngestRequest,
-  IngestResponse,
-} from "../../src/types/index.ts";
+import { isValidAdminKey } from "@/lib/admin";
+import { MAX_CHUNK_LENGTH, MAX_CHUNKS_PER_REQUEST } from "@/lib/constants";
+import { embed } from "@/lib/embeddings";
+import { jsonError, jsonOk } from "@/lib/errors";
+import { explainSupabaseError, getSupabase } from "@/lib/supabase";
+import type { IngestChunk, IngestRequest, IngestResponse } from "@/types";
 
-export default async function handler(
-  request: Request,
-  _context: Context
-): Promise<Response> {
-  if (request.method !== "POST") {
-    return jsonError(405, "METHOD_NOT_ALLOWED", "Use POST");
-  }
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
+export async function POST(request: Request) {
   try {
     if (!isValidAdminKey(request.headers.get("x-admin-key"))) {
       return jsonError(401, "UNAUTHORIZED", "Invalid or missing admin key");
@@ -55,7 +43,11 @@ export default async function handler(
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i] as IngestChunk | undefined;
-      if (!chunk || typeof chunk.content !== "string" || chunk.content.trim() === "") {
+      if (
+        !chunk ||
+        typeof chunk.content !== "string" ||
+        chunk.content.trim() === ""
+      ) {
         return jsonError(
           400,
           "VALIDATION_ERROR",
@@ -73,7 +65,6 @@ export default async function handler(
 
     const supabase = getSupabase();
 
-    // Ensure tenant exists
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
       .select("id")
@@ -82,7 +73,11 @@ export default async function handler(
 
     if (tenantError) {
       console.error("[ingest] tenant lookup failed:", tenantError.message);
-      return jsonError(500, "INTERNAL_ERROR", "Failed to validate tenant");
+      return jsonError(
+        500,
+        "INTERNAL_ERROR",
+        explainSupabaseError(tenantError.message)
+      );
     }
     if (!tenant) {
       return jsonError(404, "NOT_FOUND", "Tenant not found");
@@ -112,7 +107,11 @@ export default async function handler(
 
     if (insertError) {
       console.error("[ingest] insert failed:", insertError.message);
-      return jsonError(500, "INSERT_ERROR", "Failed to insert documents");
+      return jsonError(
+        500,
+        "INSERT_ERROR",
+        explainSupabaseError(insertError.message)
+      );
     }
 
     const response: IngestResponse = {
