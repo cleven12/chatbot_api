@@ -333,6 +333,54 @@ curl -s -X POST ${api}/chat \\
           </li>
         </ul>
 
+        <h3 id="capacity">Ingest capacity (tokens / full website)</h3>
+        <div className="table-wrap">
+          <table className="docs-table">
+            <thead>
+              <tr>
+                <th>Limit</th>
+                <th>Value</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Chunk size</td>
+                <td>8,000 chars</td>
+                <td>~1.5–2k tokens each (rule of thumb)</td>
+              </tr>
+              <tr>
+                <td>Chunks / request</td>
+                <td>50</td>
+                <td>Repeat calls to add more</td>
+              </tr>
+              <tr>
+                <td>Max per request</td>
+                <td>~400k chars</td>
+                <td>50 × 8,000 — still constrained by function timeout</td>
+              </tr>
+              <tr>
+                <td>DB hard cap</td>
+                <td>None in app code</td>
+                <td>Postgres/Supabase plan + embedding cost</td>
+              </tr>
+              <tr>
+                <td>~1,000 web pages</td>
+                <td>Possible after chunking</td>
+                <td>
+                  Scrape → clean → chunk → many ingest batches. Prefer FAQs &amp;
+                  packages first for sales demos.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="muted">
+          Vectors are not “tokens stored forever” — each chunk is one 768-dim
+          embedding. Chat only retrieves the top 4 nearest chunks, so quality of
+          chunks matters more than raw page count.
+        </p>
+
         <h2 id="next">Next steps</h2>
         <div className="btn-row">
           <Link className="btn btn-primary" href="/integrate">

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tour RAG Widget Sample</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 40rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+        color: #12201a;
+      }
+      code {
+        background: #eef2ef;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+      }
+      .note {
+        background: #e6f7ef;
+        border: 1px solid #c7ebd9;
+        border-radius: 12px;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tour RAG floating widget sample</h1>
+    <p>
+      This page loads the same embeddable widget used for live demos. Open the
+      green bubble bottom-right.
+    </p>
+    <div class="note">
+      <p>
+        Set your tenant key in the script tag
+        <code>data-api-key</code> (or query
+        <code>?key=...</code>).
+      </p>
+      <p>
+        Production script:
+        <code>https://tourragapi.vercel.app/tour-rag-widget.js</code>
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var key = params.get("key") || "";
+        if (key) {
+          window.TourRAGConfig = {
+            apiKey: key,
+            title: "Safari Assistant",
+            subtitle: "Demo · Tour RAG API",
+            welcome:
+              "Hi! Ask about safaris, treks, packages, or prices from the knowledge base.",
+            primary: "#0d8f5b",
+            apiBase: location.origin + "/api/v1",
+          };
+        }
+      })();
+    </script>
+    <script
+      src="/tour-rag-widget.js"
+      data-api-key=""
+      data-title="Safari Assistant"
+      data-subtitle="Demo · Tour RAG API"
+      data-welcome="Add ?key=YOUR_TENANT_API_KEY to the URL, or set data-api-key."
+      data-primary="#0d8f5b"
+      data-api-base="/api/v1"
+      defer
+    ></script>
+  </body>
+</html>

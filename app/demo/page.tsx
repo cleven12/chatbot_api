@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import { TourRagWidgetLoader } from "@/components/TourRagWidgetLoader";
 
 interface ChatSource {
   id: string;
@@ -122,6 +123,16 @@ export default function DemoPage() {
 
   return (
     <main className="demo-shell">
+      {apiKey.trim() ? (
+        <TourRagWidgetLoader
+          apiKey={apiKey}
+          title="Safari Assistant"
+          subtitle="Floating widget · same as operator sites"
+          welcome="Hi! This is the embeddable bubble operators put on their website. Ask about packages from the knowledge base."
+          primary="#0d8f5b"
+          apiBase="/api/v1"
+        />
+      ) : null}
       <header>
         <p className="eyebrow">Live demo</p>
         <h1 style={{ margin: "0 0 0.35rem", fontSize: "1.6rem" }}>
@@ -129,8 +140,11 @@ export default function DemoPage() {
         </h1>
         <p className="muted small" style={{ margin: 0 }}>
           Paste a tenant API key from{" "}
-          <Link href="/docs#post-tenants">POST /tenants</Link>. Simple UI only —
-          full guide on <Link href="/docs">docs</Link>.
+          <Link href="/docs#post-tenants">POST /tenants</Link>. After you save
+          the key, a <strong>floating chat bubble</strong> appears (bottom-right)
+          — same widget for customer sites. Full guide on{" "}
+          <Link href="/docs">docs</Link> /{" "}
+          <Link href="/integrate">integrate</Link>.
         </p>
         <div className="btn-row">
           <button

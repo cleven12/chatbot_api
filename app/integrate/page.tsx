@@ -56,10 +56,36 @@ export default function IntegratePage() {
       </section>
 
       <section className="section">
-        <h2>3. Drop-in HTML demo widget</h2>
+        <h2>3. Floating chat bubble (recommended)</h2>
         <p className="muted">
-          Paste near the end of <code>&lt;body&gt;</code> on a tour landing
-          page. Replace <code>YOUR_TENANT_KEY</code>.
+          One script tag — same style operators expect (bottom-right bubble).
+          Hosted at <code>{siteConfig.url}/tour-rag-widget.js</code>. Preview it
+          on <Link href="/demo">/demo</Link> after pasting a tenant key.
+        </p>
+        <div className="code-block">
+          <code>{`<!-- Paste before </body> on WordPress / HTML / any site -->
+<script
+  src="${siteConfig.url}/tour-rag-widget.js"
+  data-api-key="YOUR_TENANT_API_KEY"
+  data-title="Safari Assistant"
+  data-subtitle="Ask about tours & packages"
+  data-welcome="Hi! Ask about safaris, Kilimanjaro, or prices."
+  data-primary="#0d8f5b"
+  data-api-base="${api}"
+  defer
+></script>`}</code>
+        </div>
+        <p className="muted small">
+          Brand it with <code>data-primary</code> (hex color),{" "}
+          <code>data-title</code>, and <code>data-welcome</code>. For production
+          traffic, proxy chat through your server so the key is not public.
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>4. Inline panel (optional)</h2>
+        <p className="muted">
+          If you prefer a fixed chat box in the page (not a floating bubble):
         </p>
         <div className="code-block">
           <code>{`<div id="tour-rag-chat" style="max-width:420px;font-family:system-ui">
@@ -92,6 +118,29 @@ export default function IntegratePage() {
 })();
 </script>`}</code>
         </div>
+      </section>
+
+      <section className="section seo-block">
+        <h2>How much content can one tenant ingest?</h2>
+        <p>
+          <strong>Per request:</strong> up to <strong>50 chunks</strong>, each
+          up to <strong>8,000 characters</strong> (~1.5–2k tokens per chunk
+          roughly). Call ingest many times to grow the knowledge base.
+        </p>
+        <p>
+          <strong>Whole website with ~1,000 pages?</strong> Yes in principle —
+          but not as one raw dump. Scrape → clean → split into chunks (~500–1,500
+          words) → batch ingest (e.g. 20–50 chunks per request). Expect on the
+          order of <strong>thousands of vectors</strong> for a large site, not
+          one vector per full page.
+        </p>
+        <p className="muted small">
+          Practical limits today: Gemini embedding rate limits, Vercel function
+          time (embed each chunk in series), Supabase storage, and retrieval
+          quality (we only return the top 4 matches per question). For sales
+          demos, start with 20–100 high-value FAQ/package chunks — not 1,000
+          noisy HTML pages.
+        </p>
       </section>
 
       <section className="section seo-block">
