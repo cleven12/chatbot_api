@@ -66,12 +66,10 @@ export default function IntegratePage() {
           <code>{`<!-- Paste before </body> on WordPress / HTML / any site -->
 <script
   src="${siteConfig.url}/tour-rag-widget.js"
-  data-api-key="YOUR_TENANT_API_KEY"
-  data-title="Safari Assistant"
-  data-subtitle="Ask about tours & packages"
-  data-welcome="Hi! Ask about safaris, Kilimanjaro, or prices."
-  data-primary="#0d8f5b"
+  data-api-key="YOUR_TENANT_KEY"
   data-api-base="${api}"
+  data-title="Safari Assistant"
+  data-primary="#0d8f5b"
   defer
 ></script>`}</code>
         </div>

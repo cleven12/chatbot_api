@@ -1,5 +1,6 @@
 import { getTenant } from "@/lib/auth";
 import { MATCH_COUNT, MAX_MESSAGE_LENGTH } from "@/lib/constants";
+import { corsPreflight, CORS_HEADERS } from "@/lib/cors";
 import { embed } from "@/lib/embeddings";
 import { jsonError, jsonOk } from "@/lib/errors";
 import { askLLM } from "@/lib/llm";
@@ -14,6 +15,11 @@ import type {
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+/** Browser widget preflight (x-api-key + JSON). */
+export async function OPTIONS() {
+  return corsPreflight();
+}
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +41,7 @@ export async function POST(request: Request) {
           headers: {
             "Content-Type": "application/json",
             "Retry-After": String(rate.retryAfterSeconds),
+            ...CORS_HEADERS,
           },
         }
       );
