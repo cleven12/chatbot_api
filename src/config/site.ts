@@ -32,11 +32,11 @@ export const siteConfig = {
     github: "https://github.com/cleven12",
     githubUser: "cleven12",
     /** Update these so visitors can reach you */
-    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+255 692 654 000",
+    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+255 754 225 781",
     phoneHref:
-      process.env.NEXT_PUBLIC_CONTACT_PHONE_HREF || "tel:+255692654000",
+      process.env.NEXT_PUBLIC_CONTACT_PHONE_HREF || "tel:+255754225781",
     whatsapp:
-      process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "https://wa.me/255692654000",
+      process.env.NEXT_PUBLIC_CONTACT_WHATSAPP || "https://wa.me/255754225781",
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "clevengodsontech@gmail.com",
     emailHref:
       process.env.NEXT_PUBLIC_CONTACT_EMAIL_HREF ||
