@@ -28,9 +28,9 @@ export const siteConfig = {
     "tourragapi",
   ],
   author: {
-    name: "Cleven",
-    github: "https://github.com/cleven12",
-    githubUser: "cleven12",
+    name: ["Cleven","Yusra"],
+    github: ["https://github.com/cleven12", "https://github.com/yusra1ally",],
+    githubUser: ["cleven12","yusra1ally"],
     /** Update these so visitors can reach you */
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+255 754 225 781",
     phoneHref:

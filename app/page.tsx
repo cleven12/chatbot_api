@@ -157,7 +157,7 @@ export default function HomePage() {
           <p className="muted">
             Yes — this is an MVP demo API with public documentation, health
             checks, tenant isolation, and a live base URL at{" "}
-            <code>{base}</code>. Use the docs to integrate; contact Cleven for
+            <code>{base}</code>. Use the docs to integrate; contact <a href="https://github.com/yusra1ally">Yusra</a> or <a href="https://github.com/cleven12">Cleven</a> for
             production hardening and custom setups.
           </p>
         </details>
